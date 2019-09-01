@@ -1,0 +1,83 @@
+---
+title: "JHU Capstone Final Report"
+author: "Andrew Chastain"
+date: "8/28/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# JHU Capstone Project
+
+The final project for the Data Science Specialization with Johns Hopkins University and Coursera was to develop a natural language processing (NLP) application that would determine the next word given an input string. This project was a collaboration with SwiftKey, the maker of a similar text prediction algorithm.  
+
+# Natural Language Processing
+
+Natural Language Processing is the term used to describe the methodologies surrounding analyzing the patterns found in natural languages. Specifically, this project looked at an n-gram model of the language where a training set derived from blogs posts, news articles and Twitter posts were broken into strings of length n. These strings were then aggregated and counted, resulting in a frequency for each string. Splitting the strings into a "root" string of length n-1 and a terminal word allowed for the calculation of probability for each terminal word for a given root.
+
+## Maximum Likelihood Probability
+
+The simplest probability involves calculating a "maximum likelihood (ML) probability," which is simply the count of an n-gram divided by the count of the (n-1)-gram root. For example, if the training set had 10 occurances of "this is a test" and 50 occurances of "this is a" then the pML(test|this is a) would be 10/50, or 20%. The weaknesses of this model are two-fold. First, this model doesn't assign any probability to unseen words/n-grams, so the calculated probabilities are too high. Second, this model doesn't account for patterns in real languages. In the common example, "Francisco" might occur more frequently than many other words, but is almost always following "San." A better model takens into account how many different words are observed before and after the root and using that to adjust the final probability.
+
+## Kneser-Ney Probability
+
+One method that has been shown to more accurately calculate the terminal word probability is the Kneser-Ney algorithm. This algorithm corrects the above issues by employing a "discounting" of the probability of infrequent words, and adjusting the final probability by calculating a "continuation probability" of the final word that takes in to consideration the number of different possible terminals for the root, and roots for the terminal word.
+
+# Cleaning the training data
+
+The training data that was provided consisted of <FIND NUMBER> fragments of blog posts, <FIND NUMBER> fragments of news articles, and <FIND NUMBER> tweets. While these sources were primarily in English, the use of different characters (such as emoticons in Twitter), smart punctuation (typically from Microsoft Word) and occasional foreign words or characters complicated the analysis and processing. Furthermore, encoding issues between UTF-8 and Windows-1252 would cause many of those character to display in unicode or break a character into a set of incorrect unicode characters. Stripping out just those characters (or words containing those characters) had the consequence of breaking context.  
+
+For example, if a string read "I saw it in the Encyclopædia Britannica" and the æ character was encoding incorrectly then removing the character would create the word "Encyclopdia" (which increases number of unique n-grams, but for a word that wouldn't be seen except in error). Removing the word "Encyclopædia" would break the context as well, as it would generate n-grams that weren't in the original text ("in the Britannica"). Both situations would generate spurious results. Thus, modifying the text during cleaning had a significant risk of generating bad n-grams and impacting the probability calculations.
+
+## Unicode Scripts and Categories
+
+The workaround that I employed for these problematic characters was to filter out sentences that contained problematic characters. I did this using the unicode scripts and categories. Unicode scripts refers to the character sets that are assigned to specific languages. An example of a unicode category is `\\p{N}`, which represents all numbers. An example of a unicode script is `\\p{Thai}`, which is the collection of all unicode characters for rendering Thai. From the list at https://www.regular-expressions.info/unicode.html I made a scripts list:  
+
+```{r eval=FALSE}
+scripts <- list("\\p{L}", "\\p{Ll}", "\\p{Lu}", "\\p{Lt}", "\\p{L&}",
+                "\\p{Lm}", "\\p{Lo}", "\\p{M}", "\\p{Mn}", "\\p{Mc}",
+                "\\p{Me}", "\\p{Z}", "\\p{Zs}", "\\p{Zl}", "\\p{Zp}",
+                "\\p{S}", "\\p{Sm}", "\\p{Sc}", "\\p{Sk}", "\\p{So}",
+                "\\p{N}", "\\p{Nd}", "\\p{Nl}", "\\p{No}", "\\p{P}",
+                "\\p{Pd}", "\\p{Ps}", "\\p{Pe}", "\\p{Pi}", "\\p{Pf}",
+                "\\p{Pc}", "\\p{Po}", "\\p{C}", "\\p{Cc}", "\\p{Cf}",
+                "\\p{Co}", "\\p{Cs}", "\\p{Cn}",
+                "\\p{Common}", "\\p{Arabic}", "\\p{Armenian}",
+                "\\p{Bengali}", "\\p{Bopomofo}", "\\p{Braille}",
+                "\\p{Buhid}", "\\p{Canadian_Aboriginal}", "\\p{Cherokee}",
+                "\\p{Cyrillic}", "\\p{Devanagari}", "\\p{Ethiopic}", 
+                "\\p{Georgian}", "\\p{Greek}", "\\p{Gujarati}", 
+                "\\p{Gurmukhi}", "\\p{Han}", "\\p{Hangul}", "\\p{Hanunoo}", 
+                "\\p{Hebrew}", "\\p{Hiragana}", "\\p{Inherited}", 
+                "\\p{Kannada}", "\\p{Katakana}", "\\p{Khmer}", "\\p{Lao}", 
+                "\\p{Latin}", "\\p{Limbu}", "\\p{Malayalam}", 
+                "\\p{Mongolian}", "\\p{Myanmar}", "\\p{Ogham}", 
+                "\\p{Oriya}", "\\p{Runic}", "\\p{Sinhala}", "\\p{Syriac}", 
+                "\\p{Tagalog}", "\\p{Tagbanwa}", "\\p{Tamil}", 
+                "\\p{Telugu}", "\\p{Thaana}", "\\p{Thai}", "\\p{Tibetan}", 
+                "\\p{Yi}")
+```  
+
+I was then able to count how many lines had example of each class (in the blogs, in the example below):  
+
+```{r eval=FALSE}
+dt <- data.table("script" = scripts, "count" = NA)
+i = 1
+while(i < 83) {
+    dt[[i,2]] <- sum(grepl(dt[[i,1]], blogs, perl = T))
+    i <- i + 1
+}
+```  
+
+Since numbers, non-Latin/Common scripts, and weird punctuation/emoticons/control characters were uncommon and there were a large number of documents to use, it was fastest to filter out anything that would otherwise need to be cleaned. That way only "clean" sentences would be used and context for those sentences would be maintained.
+
+## Additional Cleaning
+
+After removing the majority of the bad characters there were still some punctuation and common characters that needed to be removed.
+
+## Testing and Validation Sets
+
+After the data was cleaned it was split into testing and validation sets. This allowed for checking the accuracy of the model.
+
