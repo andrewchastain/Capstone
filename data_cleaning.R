@@ -1,4 +1,6 @@
 require(readr)
+require(data.table)
+setDTthreads(threads = 0)
 
 # generate list of unicode categories and scripts
 scripts <- list("\\p{L}", "\\p{Ll}", "\\p{Lu}", "\\p{Lt}", "\\p{L&}",
@@ -97,8 +99,6 @@ all_src <- c(news, blogs, twitter)
 
 all_src_clean <- clean_wrapper(all_src)
 
-
-
 # break the training data into training, test and validation sets
 set.seed(321123)
 test <- c(runif(length(all_src_clean)) > .5)
@@ -119,3 +119,5 @@ saveRDS(all_valid, "./valid/all_src.rds")
 saveRDS(all_src, "./train/all_src.rds")
 rm(all_valid)
 gc()
+
+## NEEDS THE FINAL CLEANING REFACTORED

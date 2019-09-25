@@ -108,10 +108,3 @@ all_1g_freq <- data.table("uni" = all_1g, key = "uni")[, .N, by = uni][order(-N)
 all_1g_freq[, pML := N/sum(N)]
 saveRDS(all_1g_freq, "./processed/all_1g.rds")
 rm(all_1g, all_1g_freq)
-
-kneserney(readRDS("./processed/all_2gram.rds"), 2)
-kneserney(readRDS("./processed/all_3gram.rds"), 3)
-kneserney(readRDS("./processed/all_4gram.rds"), 4)
-kneserney(readRDS("./processed/all_5gram.rds"), 5)
-kneserney(readRDS("./processed/all_6gram.rds"), 6)
-
