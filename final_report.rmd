@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Overview
 
-The final project for the Data Science Specialization with Johns Hopkins University and Coursera was to develop a natural language processing (NLP) application that would determine the next word given an input string. This project was a collaboration with SwiftKey, the maker of a similar text prediction algorithm.  
+The final project for the Data Science Specialization with Johns Hopkins University and Coursera was to develop a natural language processing (NLP) application in R and deploying it using Shiny.io. Trained off blog posts, news articles and tweets, the application determines the most likely next word given an input string of words. This project developed in collaboration with SwiftKey, the maker of a similar text prediction algorithm, and the providers of the training corpuses.  
 
 ## Natural Language Processing
 
@@ -166,11 +166,11 @@ Following the earlier syntax, the numerator is the count of unique words $w_{i-n
 
 ## Backoff Strategy
 
-One difference between this implementation of the modified Kneser-Ney Smoothing and the one presented in the Chen and Goodman paper is that this implementation treats all n-grams as the highest order n-gram. In the 1999 paper implementations, in sections 4.1.6-7, n-gram levels below the highest are smoothed by using the unique combination counts instead of corpus frequency:  
+One difference between this implementation of the modified Kneser-Ney Smoothing algorithm and the one presented in the Chen and Goodman paper is that this implementation treats all n-gram lengths as the highest order n-gram when calculating. In the 1999 paper implementations, in sections 4.1.6-7, n-gram levels below the highest are smoothed by using the unique combination counts instead of corpus frequency:  
 $$
 p_{KN}(w_i|w_{i-n+1}^{i-1}) = \frac{N_{1+}(w_{i-n+1}^i) - D(N_{1+}(w_{i-n+1}^i))}{\sum_{w_i} N_{1+}(w_{i-n+1}^i)} + \gamma(w_{i-n+1}^{i-1}) p_{KN}(w_i|w_{i-n+2}^{i-1})
 $$  
-It was not feasible to develop the lower-order model originally, but it would be interesting to compare the models in this task.  
+It was not feasible (due to time constraints) to develop the lower-order model originally, but it would be interesting to compare the models in this task.  
 
 The brief for this project asked for an application to produce a single word prediction based on an input string. Once $p_{KN}$ values were calculated for each root-term pair it was possible to discard all but the highest probability terminal word. This greatly reduced the size of the database needed to encode a reasonable number of known inputs for each n-gram level from a 5-gram (a 6-gram broken into a root and prediction) down to a unigram (split bigrams) model.  
 
